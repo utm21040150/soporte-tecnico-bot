@@ -83,12 +83,13 @@ process.on('uncaughtException', (err) => {
     reportError(err, { type: 'uncaughtException' }).finally(() => process.exit(1));
 });
 
-client.on('qr', qr => {
-    qrcode.generate(qr, { small: true });
-    console.log('QR generado. Escanea con tu celular.');
-    if (LOG_ENDPOINT) {
-        postWithRetry(LOG_ENDPOINT, { event: 'qr', ts: new Date().toISOString() }).catch(() => { });
-    }
+const QRCode = require('qrcode');
+
+let currentQR = null;
+
+client.on('qr', async (qr) => {
+    console.log('QR recibido, generando imagen...');
+  global.currentQR = await QRCode.toDataURL(qr);
 });
 
 client.on('authenticated', (session) => {
