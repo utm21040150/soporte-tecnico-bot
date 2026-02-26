@@ -4,6 +4,7 @@ const app = express();
 app.use(express.json());
 require('./bot');
 global.currentQR = null;
+
 // Configura estas variables si lo deseas o usa las del archivo bot.js
 const SHEET_API = process.env.SHEET_API || 'https://script.google.com/macros/s/AKfycby_P0LSgCl7VRfHtdvP8_JhA-bxN8tiGpeuj6G25gIBEPSaoqzpNXj2mFqUp5aqs3vUzA/exec';
 

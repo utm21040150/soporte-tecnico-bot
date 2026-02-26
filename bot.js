@@ -85,13 +85,10 @@ process.on('uncaughtException', (err) => {
 
 const QRCode = require('qrcode');
 
-let currentQR = null;
-
 client.on('qr', async (qr) => {
-    console.log('QR recibido, generando imagen...');
-  global.currentQR = await QRCode.toDataURL(qr);
+    console.log('QR recibido');
+    global.currentQR = await QRCode.toDataURL(qr);
 });
-
 client.on('authenticated', (session) => {
     console.log('Authenticated with WhatsApp Web (session saved).');
 });
