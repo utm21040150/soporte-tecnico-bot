@@ -1,5 +1,6 @@
 const express = require('express');
 const axios = require('axios');
+const path = require('path');
 
 const app = express();
 app.use(express.json());
@@ -10,17 +11,20 @@ global.currentQR = null;
 // 🔥 Levantar el bot
 require('./bot');
 
-// Configura estas variables si lo deseas
+// 🔥 Servir archivos estáticos (HTML, CSS, JS)
+app.use(express.static(path.join(__dirname)));
+
+// Configuración Google Sheets
 const SHEET_API = process.env.SHEET_API || 'https://script.google.com/macros/s/AKfycby_P0LSgCl7VRfHtdvP8_JhA-bxN8tiGpeuj6G25gIBEPSaoqzpNXj2mFqUp5aqs3vUzA/exec';
 
 
-// ✅ Ruta principal (evita Cannot GET /)
+// ✅ Página principal → ahora carga index.html
 app.get('/', (req, res) => {
-  res.send('Bot de Soporte Técnico funcionando correctamente 🚀');
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 
-// ✅ Ruta para ver el QR como imagen
+// ✅ Ruta para ver el QR
 app.get('/qr', (req, res) => {
   if (!global.currentQR) {
     return res.send('QR aún no generado, espera unos segundos y recarga...');
@@ -33,7 +37,7 @@ app.get('/qr', (req, res) => {
 });
 
 
-// Endpoint de proxy para lectura (GET)
+// ✅ Proxy Google Sheets
 app.get('/sheet-proxy', async (req, res) => {
     try {
         const url = SHEET_API + (req.url.includes('?') ? '&' : '?') +
@@ -53,7 +57,7 @@ app.get('/sheet-proxy', async (req, res) => {
 });
 
 
-// Endpoint para recibir logs/errors desde el bot
+// ✅ Logs
 app.post('/log', async (req, res) => {
     try {
         console.log('[LOG]', req.body);
@@ -69,4 +73,4 @@ app.post('/log', async (req, res) => {
 
 // 🔥 Puerto dinámico obligatorio en Railway
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));git add .
