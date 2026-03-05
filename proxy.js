@@ -69,7 +69,39 @@ app.post('/log', async (req, res) => {
         return res.status(500).json({ error: String(err.message || err) });
     }
 });
+// ✅ Ruta para enviar notificación WhatsApp
+app.post('/notificar', async (req, res) => {
+    try {
+        const { ticketId, tecnico, nombre, problema } = req.body;
 
+        if (!global.client) {
+            return res.status(500).json({ error: 'WhatsApp no está listo aún' });
+        }
+
+        const numeros = {
+            Brandon: '5214492056415@c.us',
+            Iram: '5214491680420@c.us',
+            Christopher: '521449@c.us'
+        };
+
+        const numero = numeros[tecnico];
+z
+        if (!numero) {
+            return res.status(400).json({ error: 'Técnico inválido' });
+        }
+
+        await global.client.sendMessage(
+            numero,
+            `📌 Nuevo ticket asignado\n\nTicket: #${ticketId}\nAsignado a: ${tecnico}`
+        );
+
+        res.json({ success: true });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error enviando mensaje' });
+    }
+});
 
 // 🔥 Puerto dinámico obligatorio en Railway
 const PORT = process.env.PORT || 3000;

@@ -25,6 +25,7 @@ const client = new Client({
     ]
   }
 });
+global.client = client;
 
 const SHEET_API = process.env.SHEET_API || "https://script.google.com/macros/s/AKfycby_P0LSgCl7VRfHtdvP8_JhA-bxN8tiGpeuj6G25gIBEPSaoqzpNXj2mFqUp5aqs3vUzA/exec";
 
