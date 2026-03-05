@@ -85,7 +85,6 @@ app.post('/notificar', async (req, res) => {
         };
 
         const numero = numeros[tecnico];
-z
         if (!numero) {
             return res.status(400).json({ error: 'Técnico inválido' });
         }
