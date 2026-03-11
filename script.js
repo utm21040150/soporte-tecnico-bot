@@ -1,5 +1,4 @@
-
-const SHEET_URL = "https://script.google.com/macros/s/AKfycby_P0LSgCl7VRfHtdvP8_JhA-bxN8tiGpeuj6G25gIBEPSaoqzpNXj2mFqUp5aqs3vUzA/exec";
+const SHEET_URL = "/sheet-proxy";
 
 const tabla = document.getElementById("tablaServicios");
 
@@ -8,11 +7,11 @@ function normalizeLabel(s) {
 }
 
 function buildSelect(options, selected, className) {
-    return `<select class="${className}">` +
-        options.map(o =>
+    return `<select class="${className}">
+        ${options.map(o =>
             `<option value="${o}" ${o === selected ? 'selected' : ''}>${o}</option>`
-        ).join('') +
-        `</select>`;
+        ).join('')}
+    </select>`;
 }
 
 function estadoClassFromValue(v) {
@@ -33,22 +32,32 @@ function prioridadClassFromValue(v) {
 }
 
 function updateCounters() {
+
     const rows = Array.from(tabla.querySelectorAll('tr'));
-    let total = rows.length, abiertos = 0, proceso = 0, cerrados = 0;
+
+    let total = rows.length;
+    let abiertos = 0;
+    let proceso = 0;
+    let cerrados = 0;
 
     rows.forEach(r => {
+
         const sel = r.querySelector('.estado-select');
         const val = sel ? sel.value : '';
+
         const n = normalizeLabel(val);
+
         if (n.includes('abierto')) abiertos++;
         else if (n.includes('proceso')) proceso++;
         else if (n.includes('cerrado')) cerrados++;
+
     });
 
     document.getElementById('total').textContent = total;
     document.getElementById('abiertos').textContent = abiertos;
     document.getElementById('proceso').textContent = proceso;
     document.getElementById('cerrados').textContent = cerrados;
+
 }
 
 function attachRowListeners(row) {
@@ -58,33 +67,49 @@ function attachRowListeners(row) {
     const tecnicoSel = row.querySelector('.tecnico-select');
 
     if (estadoSel) {
+
         estadoSel.addEventListener('change', () => {
+
             const v = estadoSel.value;
+
             estadoSel.classList.remove('abierto', 'proceso', 'cerrado');
+
             const estClass = estadoClassFromValue(v);
+
             if (estClass) estadoSel.classList.add(estClass);
+
             updateCounters();
+
         });
+
     }
 
     if (prioridadSel) {
+
         prioridadSel.addEventListener('change', () => {
+
             const v = prioridadSel.value;
+
             const td = prioridadSel.closest('td');
 
             td.classList.remove('prioridad-alta', 'prioridad-media', 'prioridad-baja');
             prioridadSel.classList.remove('prioridad-alta', 'prioridad-media', 'prioridad-baja');
 
             const prClass = prioridadClassFromValue(v);
+
             td.classList.add(prClass);
             prioridadSel.classList.add(prClass);
+
         });
+
     }
 
     if (tecnicoSel) {
+
         tecnicoSel.addEventListener('change', async () => {
 
             const tecnico = tecnicoSel.value;
+
             if (!tecnico) return;
 
             const idTicket = row.children[0].textContent;
@@ -97,6 +122,7 @@ function attachRowListeners(row) {
             }
 
             try {
+
                 const response = await fetch('/notificar', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -111,18 +137,22 @@ function attachRowListeners(row) {
                 const data = await response.json();
 
                 if (data.success) {
-                    alert('✅ Notificación enviada por WhatsApp');
+                    alert('Notificación enviada por WhatsApp');
                 } else {
-                    alert('❌ Error enviando notificación');
+                    alert('❌ ' + (data.error || 'Error enviando notificación'));
                 }
 
             } catch (error) {
+
                 console.error(error);
-                alert('❌ Error de conexión con el servidor');
+                alert(' Error de conexión con el servidor');
+
             }
 
         });
+
     }
+
 }
 
 function renderFromRows(jsonRows, cols) {
@@ -133,14 +163,23 @@ function renderFromRows(jsonRows, cols) {
     cols.forEach((c, i) => headerMap[normalizeLabel(c)] = i);
 
     const find = (row, names) => {
+
         for (const nm of names) {
+
             const idx = headerMap[normalizeLabel(nm)];
+
             if (idx !== undefined) {
+
                 const cell = row.c[idx];
+
                 if (cell && cell.v !== undefined) return cell.v;
+
             }
+
         }
+
         return '';
+
     };
 
     jsonRows.forEach(r => {
@@ -167,6 +206,7 @@ function renderFromRows(jsonRows, cols) {
         `;
 
         const tr = document.createElement('tr');
+
         tr.innerHTML = `
             <td>${id}</td>
             <td>${nombre}</td>
@@ -181,8 +221,8 @@ function renderFromRows(jsonRows, cols) {
 
         tabla.appendChild(tr);
 
-        // Aplicar clases iniciales
         const insertedEstadoSel = tr.querySelector('.estado-select');
+
         if (insertedEstadoSel) {
             const estClass = estadoClassFromValue(estado);
             if (estClass) insertedEstadoSel.classList.add(estClass);
@@ -190,44 +230,59 @@ function renderFromRows(jsonRows, cols) {
 
         const insertedPrioridadSel = tr.querySelector('.prioridad-select');
         const prioridadCell = tr.querySelector('.prioridad-cell');
+
         const prClass = prioridadClassFromValue(prioridad);
 
         if (insertedPrioridadSel) insertedPrioridadSel.classList.add(prClass);
         if (prioridadCell) prioridadCell.classList.add(prClass);
 
         attachRowListeners(tr);
+
     });
 
     updateCounters();
+
 }
 
-// FETCH GOOGLE SHEETS
+// CARGAR DATOS DESDE GOOGLE SHEETS
 
 fetch(SHEET_URL)
     .then(res => {
+
         if (!res.ok) throw new Error('HTTP ' + res.status);
+
         return res.text();
+
     })
     .then(text => {
+
         let cleanedText = text;
+
         if (cleanedText.includes('{'))
             cleanedText = cleanedText.substring(cleanedText.indexOf('{'));
+
         if (cleanedText.endsWith('*/'))
             cleanedText = cleanedText.slice(0, -2);
 
         const json = JSON.parse(cleanedText);
+
         const rows = json.table?.rows || [];
         const cols = (json.table?.cols || []).map(c => c.label || '');
 
         if (rows.length === 0) {
+
             tabla.innerHTML = '<tr><td colspan="9">No hay datos disponibles</td></tr>';
             return;
+
         }
 
         renderFromRows(rows, cols);
+
     })
     .catch(err => {
+
         console.error('Error cargando datos:', err);
+
         tabla.innerHTML = '<tr><td colspan="9">Error al cargar los datos</td></tr>';
+
     });
-    
