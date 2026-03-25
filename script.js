@@ -1,4 +1,4 @@
-const SHEET_URL = "/sheet-proxy";
+﻿const SHEET_URL = "/sheet-proxy";
 
 const tabla = document.getElementById("tablaServicios");
 
@@ -9,8 +9,8 @@ function normalizeLabel(s) {
 function buildSelect(options, selected, className) {
     return `<select class="${className}">
         ${options.map(o =>
-            `<option value="${o}" ${o === selected ? 'selected' : ''}>${o}</option>`
-        ).join('')}
+        `<option value="${o}" ${o === selected ? 'selected' : ''}>${o}</option>`
+    ).join('')}
     </select>`;
 }
 
@@ -121,33 +121,8 @@ function attachRowListeners(row) {
                 return;
             }
 
-            try {
-
-                const response = await fetch('/notificar', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        ticketId: idTicket,
-                        tecnico: tecnico,
-                        nombre: nombre,
-                        problema: problema
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    alert('Notificación enviada por WhatsApp');
-                } else {
-                    alert('❌ ' + (data.error || 'Error enviando notificación'));
-                }
-
-            } catch (error) {
-
-                console.error(error);
-                alert(' Error de conexión con el servidor');
-
-            }
+            // Se puede llamar al backend aquí si es necesario.
+            // await fetch('/notificar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ticketId: idTicket, tecnico, nombre, problema }) });
 
         });
 

@@ -27,7 +27,7 @@ const client = new Client({
 });
 global.client = client;
 
-const SHEET_API = process.env.SHEET_API || "https://script.google.com/macros/s/AKfycby_P0LSgCl7VRfHtdvP8_JhA-bxN8tiGpeuj6G25gIBEPSaoqzpNXj2mFqUp5aqs3vUzA/exec";
+const SHEET_API = process.env.SHEET_API || "https://script.google.com/macros/s/AKfycbyMckIbgrOmx6NnEsHWRKiZWlR16-zYTVMlPNLEdtY1L2XhhMMlWA5Rmf-nYMEk5i_CYQ/exec";
 
 // Optional: endpoint to receive logs (you can point to proxy /log)
 const LOG_ENDPOINT = process.env.LOG_ENDPOINT || null;
@@ -114,13 +114,41 @@ client.on('ready', () => {
 });
 
 client.on('message', async msg => {
+    // ENCUESTA DE CALIFICACIÓN
+if(["1","2","3"].includes(msg.body.trim())){
+
+    const calificaciones = {
+        "1":"Malo",
+        "2":"Regular",
+        "3":"Excelente"
+    };
+
+    try{
+
+        await axios.post(SHEET_API,{
+            telefono: msg.from,
+            calificacion: calificaciones[msg.body.trim()]
+        });
+
+        await msg.reply(
+`⭐ Gracias por tu evaluación
+
+Tu opinión nos ayuda a mejorar el servicio de soporte técnico.`
+        );
+
+    }catch(e){
+        console.error("Error guardando calificación",e);
+    }
+
+    return;
+}
     const user = msg.from;
     try {
         if (!sessions[user]) {
             sessions[user] = { step: 0, data: {} };
         }
 
-        const s = sessions[user];
+        const s = sessions[user].lastTicketId = s.data.id;
 
         switch (s.step) {
 
@@ -342,6 +370,7 @@ A continuación te haremos una breve encuesta para generar tu ticket.
                 try {
                     await axios.post(SHEET_API, {
                         id: s.data.id,
+                        telefono: user,
                         nombre: s.data.nombre,
                         tipo: s.data.tipo,
                         tipo_numero: s.data.tipo_numero,
@@ -350,6 +379,7 @@ A continuación te haremos una breve encuesta para generar tu ticket.
                         ubicacion: s.data.ubicacion,
                         fecha: s.data.fecha
                     });
+                    
 
                     msg.reply(
                         `🎫 *Ticket generado correctamente*\n\n` +
