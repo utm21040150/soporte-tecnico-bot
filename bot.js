@@ -115,7 +115,7 @@ client.on('ready', () => {
 
 client.on('message', async msg => {
     // ENCUESTA DE CALIFICACIÓN
-if(["1","2","3"].includes(msg.body.trim())){
+if (sessions[msg.from]?.step === 99 && ["1","2","3"].includes(msg.body.trim())) {
 
     const calificaciones = {
         "1":"Malo",
