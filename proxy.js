@@ -143,7 +143,54 @@ app.post('/notificar', async (req, res) => {
     }
 
 });
+// Ruta para enviar encuesta al cerrar ticket
+app.post('/encuesta', async (req, res) => {
 
+    try {
+
+        const { telefono, ticketId } = req.body;
+
+        if (!telefono || !ticketId) {
+            return res.status(400).json({
+                success: false,
+                error: "Datos incompletos"
+            });
+        }
+
+        if (!global.client) {
+            return res.status(500).json({
+                success: false,
+                error: 'WhatsApp no está listo aún'
+            });
+        }
+
+        const mensaje = `📋 Tu ticket #${ticketId} ha sido atendido.
+
+🙏 Ayúdanos calificando el servicio:
+
+1️⃣ Malo
+2️⃣ Regular
+3️⃣ Excelente`;
+
+        await global.client.sendMessage(telefono, mensaje);
+
+        res.json({
+            success: true,
+            message: "Encuesta enviada"
+        });
+
+    } catch (error) {
+
+        console.error("Error enviando encuesta:", error);
+
+        res.status(500).json({
+            success: false,
+            error: 'Error enviando encuesta'
+        });
+
+    }
+
+});
 // Puerto dinámico obligatorio para Railway
 const PORT = process.env.PORT || 3000;
 

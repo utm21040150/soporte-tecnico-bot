@@ -68,20 +68,39 @@ function attachRowListeners(row) {
 
     if (estadoSel) {
 
-        estadoSel.addEventListener('change', () => {
+        estadoSel.addEventListener('change', async () => {
 
             const v = estadoSel.value;
+            const idTicket = row.children[0].textContent;
+            const telefono = row.dataset.telefono;
 
             estadoSel.classList.remove('abierto', 'proceso', 'cerrado');
-
             const estClass = estadoClassFromValue(v);
-
             if (estClass) estadoSel.classList.add(estClass);
 
             updateCounters();
 
-        });
+            // 🚀 SI SE CIERRA → enviar encuesta
+            if (v === 'Cerrado' && telefono) {
 
+                const res = await fetch('/encuesta', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        telefono: telefono,
+                        ticketId: idTicket
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    alert('📩 Encuesta enviada al usuario');
+                } else {
+                    alert('❌ Error enviando encuesta');
+                }
+            }
+        });
     }
 
     if (prioridadSel) {
@@ -121,8 +140,24 @@ function attachRowListeners(row) {
                 return;
             }
 
-            // Se puede llamar al backend aquí si es necesario.
-            // await fetch('/notificar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ticketId: idTicket, tecnico, nombre, problema }) });
+            const res = await fetch('/notificar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ticketId: idTicket,
+                    tecnico,
+                    nombre,
+                    problema
+                })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                alert('✅ Técnico notificado');
+            } else {
+                alert('❌ Error al notificar');
+            }
 
         });
 
@@ -158,7 +193,7 @@ function renderFromRows(jsonRows, cols) {
     };
 
     jsonRows.forEach(r => {
-
+        const telefono = find(r, ['telefono', 'tel', 'numero']);
         const id = find(r, ['id', 'idd', 'identificador']);
         const nombre = find(r, ['nombre', 'name']);
         const tipo = find(r, ['tipo', 'tipo de servicio', 'servicio']);
@@ -181,7 +216,7 @@ function renderFromRows(jsonRows, cols) {
         `;
 
         const tr = document.createElement('tr');
-
+        tr.dataset.telefono = telefono;
         tr.innerHTML = `
             <td>${id}</td>
             <td>${nombre}</td>
