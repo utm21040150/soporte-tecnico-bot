@@ -144,12 +144,11 @@ Tu opinión nos ayuda a mejorar el servicio de soporte técnico.`
 }
     const user = msg.from;
     try {
-        if (!sessions[user]) {
-            sessions[user] = { step: 0, data: {} };
-        }
+     if (!sessions[user]) {
+    sessions[user] = { step: 0, data: {} };
+}
 
-        const s = sessions[user].lastTicketId = s.data.id;
-
+const s = sessions[user];
         switch (s.step) {
 
             // BIENVENIDA
