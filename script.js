@@ -133,7 +133,9 @@ function attachRowListeners(row) {
 
             const idTicket = row.children[0].textContent;
             const nombre = row.children[1].textContent;
+            const tipo = row.children[2].textContent;
             const problema = row.children[3].textContent;
+            const ubicacion = row.children[4].textContent;
 
             if (!confirm(`¿Asignar ticket #${idTicket} a ${tecnico}?`)) {
                 tecnicoSel.value = "";
@@ -147,7 +149,9 @@ function attachRowListeners(row) {
                     ticketId: idTicket,
                     tecnico,
                     nombre,
-                    problema
+                    tipo,
+                   problema,
+                   ubicacion
                 })
             });
 

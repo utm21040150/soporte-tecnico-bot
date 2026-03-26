@@ -86,7 +86,7 @@ app.post('/notificar', async (req, res) => {
 
     try {
 
-        const { ticketId, tecnico, nombre, problema } = req.body;
+        const { ticketId, tecnico, nombre, tipo, problema, ubicacion } = req.body;
 
         if (!ticketId || !tecnico) {
             return res.status(400).json({
@@ -117,12 +117,14 @@ app.post('/notificar', async (req, res) => {
             });
         }
 
-        const mensaje = ` Nuevo ticket asignado
+const mensaje = `🆕 Nuevo ticket asignado
 
- Ticket: #${ticketId}
- Usuario: ${nombre}
- Problema: ${problema}
- Técnico asignado: ${tecnico}.`;
+🎫 Ticket: #${ticketId}
+👤 Usuario: ${nombre}
+🛠 Tipo: ${tipo}
+📄 Problema: ${problema}
+📍 Ubicación: ${ubicacion}
+👨‍🔧 Técnico: ${tecnico}`;
 
         await global.client.sendMessage(numero, mensaje);
 

@@ -369,7 +369,7 @@ A continuación te haremos una breve encuesta para generar tu ticket.
                 try {
                     await axios.post(SHEET_API, {
                         id: s.data.id,
-                        telefono: user,
+                        numero: user, 
                         nombre: s.data.nombre,
                         tipo: s.data.tipo,
                         tipo_numero: s.data.tipo_numero,
