@@ -27,7 +27,7 @@ const client = new Client({
 });
 global.client = client;
 
-const SHEET_API = process.env.SHEET_API || "https://script.google.com/macros/s/AKfycbyMckIbgrOmx6NnEsHWRKiZWlR16-zYTVMlPNLEdtY1L2XhhMMlWA5Rmf-nYMEk5i_CYQ/exec";
+const SHEET_API = process.env.SHEET_API || "https://script.google.com/macros/s/AKfycbyYqfNjiRnBt6g3Fl1WTnKQCmTvfJcwp3mtEcUY6q90Ini2zTTlkGzkqw4dm2M6u0XHVg/exec";
 
 // Optional: endpoint to receive logs (you can point to proxy /log)
 const LOG_ENDPOINT = process.env.LOG_ENDPOINT || null;
@@ -368,15 +368,15 @@ A continuación te haremos una breve encuesta para generar tu ticket.
 
                 try {
                     await axios.post(SHEET_API, {
-                        id: s.data.id,
-                        numero: user, 
+                        id: s.data.id, 
                         nombre: s.data.nombre,
                         tipo: s.data.tipo,
                         tipo_numero: s.data.tipo_numero,
                         problema: problemaDesc,
                         problema_numero: problemaNum,
                         ubicacion: s.data.ubicacion,
-                        fecha: s.data.fecha
+                        fecha: s.data.fecha,
+                        numero: user
                     });
                     
 

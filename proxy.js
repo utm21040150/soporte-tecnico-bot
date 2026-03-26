@@ -12,7 +12,7 @@ require('./bot');
 // Servir archivos estáticos (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname)));
 // Configuración Google Sheets
-const SHEET_API = process.env.SHEET_API || 'https://script.google.com/macros/s/AKfycbyMckIbgrOmx6NnEsHWRKiZWlR16-zYTVMlPNLEdtY1L2XhhMMlWA5Rmf-nYMEk5i_CYQ/exec';
+const SHEET_API = process.env.SHEET_API || 'https://script.google.com/macros/s/AKfycbyYqfNjiRnBt6g3Fl1WTnKQCmTvfJcwp3mtEcUY6q90Ini2zTTlkGzkqw4dm2M6u0XHVg/exec';
 //  Página principal
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
