@@ -3,23 +3,30 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Soporte Tecnicó</title>
+    <title>Soporte Técnico</title>
+
+    <!-- RESPONSIVE (muy importante) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Estilos -->
     <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
 
+    <!-- HEADER -->
     <header class="header">
-        <h1>Soporte Técnico</h1>
+        <h1>🛠 Soporte Técnico</h1>
         <span class="subtitle">Sistema de Gestión de Mantenimiento</span>
     </header>
-    
 
+    <!-- DASHBOARD -->
     <section class="cards">
         <div class="card">
             <h3>Total de Servicios</h3>
             <p id="total">0</p>
         </div>
+
         <div class="card">
             <h3>Servicios Abiertos</h3>
             <p id="abiertos">0</p>
@@ -32,11 +39,11 @@
             <h3>Servicios Cerrados</h3>
             <p id="cerrados">0</p>
         </div>
-        
     </section>
 
+    <!-- TABLA -->
     <section class="table-container">
-        <h2>Servicios de Mantenimiento</h2>
+        <h2>📋 Servicios de Mantenimiento</h2>
 
         <table>
             <thead>
@@ -49,14 +56,19 @@
                     <th>Estado</th>
                     <th>Prioridad</th>
                     <th>Fecha</th>
-                    <th>Asignar Técnico</th>
+                    <th>Técnico</th>
                 </tr>
             </thead>
-            <tbody id="tablaServicios"></tbody>
+
+            <tbody id="tablaServicios">
+                <!-- Se llena dinámicamente -->
+            </tbody>
         </table>
     </section>
 
+    <!-- SCRIPT -->
     <script src="script.js"></script>
+
 </body>
 
 </html>
