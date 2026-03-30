@@ -33,7 +33,8 @@ const SHEET_API = process.env.SHEET_API || "https://script.google.com/macros/s/A
 const LOG_ENDPOINT = process.env.LOG_ENDPOINT || null;
 const ADMIN_NUMBER = process.env.ADMIN_NUMBER || null;
 
-const sessions = {};
+global.sessions = {};
+const sessions = global.sessions;
 
 // Utility: retry HTTP POST with backoff
 async function postWithRetry(url, data, tries = 3) {

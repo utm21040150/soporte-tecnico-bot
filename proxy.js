@@ -105,7 +105,7 @@ app.post('/notificar', async (req, res) => {
         const numeros = {
             Brandon: '5214492056415@c.us',
             Iram: '5214491680420@c.us',
-            Christopher: '5214491427973@c.us'
+            Christopher: '5214493125385@c.us'
         };
 
         const numero = numeros[tecnico];
@@ -151,6 +151,9 @@ app.post('/encuesta', async (req, res) => {
     try {
 
         const { telefono, ticketId } = req.body;
+        // 👇 activar modo encuesta
+if (!global.sessions) global.sessions = {};
+global.sessions[telefono] = { step: 99 };
 
         if (!telefono || !ticketId) {
             return res.status(400).json({

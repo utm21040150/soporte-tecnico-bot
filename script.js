@@ -131,11 +131,11 @@ function attachRowListeners(row) {
 
             if (!tecnico) return;
 
-            const idTicket = row.children[0].textContent;
-            const nombre = row.children[1].textContent;
-            const tipo = row.children[2].textContent;
-            const problema = row.children[3].textContent;
-            const ubicacion = row.children[4].textContent;
+                   const idTicket = row.dataset.id;
+                   const nombre = row.dataset.nombre;
+                   const tipo = row.dataset.tipo;
+                   const problema = row.dataset.problema;
+                   const ubicacion = row.dataset.ubicacion;
 
             if (!confirm(`¿Asignar ticket #${idTicket} a ${tecnico}?`)) {
                 tecnicoSel.value = "";
@@ -222,6 +222,11 @@ function renderFromRows(jsonRows, cols) {
         const tr = document.createElement('tr');
         tr.dataset.telefono = telefono;
         tr.innerHTML = `
+        tr.dataset.id = id;
+        tr.dataset.nombre = nombre;
+        tr.dataset.tipo = tipo;
+        tr.dataset.problema = problema;
+        tr.dataset.ubicacion = ubicacion;
             <td>${id}</td>
             <td>${nombre}</td>
             <td>${tipo}</td>
