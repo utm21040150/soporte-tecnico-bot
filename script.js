@@ -222,11 +222,6 @@ function renderFromRows(jsonRows, cols) {
         const tr = document.createElement('tr');
         tr.dataset.telefono = telefono;
         tr.innerHTML = `
-        tr.dataset.id = id;
-        tr.dataset.nombre = nombre;
-        tr.dataset.tipo = tipo;
-        tr.dataset.problema = problema;
-        tr.dataset.ubicacion = ubicacion;
             <td>${id}</td>
             <td>${nombre}</td>
             <td>${tipo}</td>
