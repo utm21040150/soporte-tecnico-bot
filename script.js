@@ -218,20 +218,16 @@ function renderFromRows(jsonRows, cols) {
                 <option value="Christopher">Christopher</option>
             </select>
         `;
+const tr = document.createElement('tr');
 
-        const tr = document.createElement('tr');
-        tr.dataset.telefono = telefono;
-        tr.innerHTML = `
-            <td>${id}</td>
-            <td>${nombre}</td>
-            <td>${tipo}</td>
-            <td>${problema}</td>
-            <td>${ubicacion}</td>
-            <td class="estado-cell">${estadoSel}</td>
-            <td class="prioridad-cell">${prioridadSel}</td>
-            <td>${fecha}</td>
-            <td>${tecnicoSelect}</td>
-        `;
+tr.dataset.telefono = telefono;
+
+// 👇 ESTO ES CLAVE
+tr.dataset.id = id;
+tr.dataset.nombre = nombre;
+tr.dataset.tipo = tipo;
+tr.dataset.problema = problema;
+tr.dataset.ubicacion = ubicacion;
 
         tabla.appendChild(tr);
 
