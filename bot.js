@@ -27,7 +27,7 @@ const client = new Client({
 });
 global.client = client;
 
-const SHEET_API = process.env.SHEET_API || "https://script.google.com/macros/s/AKfycbw2LAChJ6PpNvoOdrtc1Fu1zmX69_qQhnnp_vrfBkAslG8kBKFQiqF0Du51KAG-HuJA1w/exec";
+const SHEET_API = process.env.SHEET_API || "https://script.google.com/macros/s/AKfycbykul9IhGs14yIaJgzP_JmKXQt8yfKKaC6u_mSSsPc0HccDCu9kODmwDgxM6EdD6GdgBg/exec";
 
 // Optional: endpoint to receive logs (you can point to proxy /log)
 const LOG_ENDPOINT = process.env.LOG_ENDPOINT || null;
