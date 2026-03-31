@@ -136,6 +136,8 @@ if (sessions[msg.from]?.step === 99 && ["1","2","3"].includes(msg.body.trim())) 
 
 Tu opinión nos ayuda a mejorar el servicio de soporte técnico.`
         );
+      // 🔥 RESETEAR SESIÓN
+        delete sessions[msg.from];
 
     }catch(e){
         console.error("Error guardando calificación",e);
@@ -361,15 +363,11 @@ A continuación te haremos una breve encuesta para generar tu ticket.
             case 4:
                 s.data.ubicacion = msg.body;
                 s.data.id = "SRV-" + Date.now();
-                s.data.fecha = new Date().toLocaleString('es-MX', {
-                    timeZone: 'America/Mexico_City',
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                  });
+              s.data.fecha = new Date().toLocaleString('es-MX', {
+               timeZone: 'America/Mexico_City',
+               dateStyle: 'short',
+               timeStyle: 'medium'
+               });
 
                 // CORRECCIÓN: Usar valores por defecto si no existen
                 const problemaDesc = s.data.problema_descripcion || s.data.problema || "No especificado";
