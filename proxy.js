@@ -88,13 +88,6 @@ app.post('/notificar', async (req, res) => {
 
         const { ticketId, tecnico, nombre, tipo, problema, ubicacion } = req.body;
 
-        if (!ticketId || !tecnico) {
-            return res.status(400).json({
-                success:false,
-                error:"Datos incompletos"
-            });
-        }
-
         if (!global.client) {
             return res.status(500).json({
                 success:false,
