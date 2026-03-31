@@ -218,17 +218,29 @@ function renderFromRows(jsonRows, cols) {
                 <option value="Christopher">Christopher</option>
             </select>
         `;
-const tr = document.createElement('tr');
 
-tr.dataset.telefono = telefono;
+  const tr = document.createElement('tr');
 
-// 👇 ESTO ES CLAVE
-tr.dataset.id = id;
-tr.dataset.nombre = nombre;
-tr.dataset.tipo = tipo;
-tr.dataset.problema = problema;
-tr.dataset.ubicacion = ubicacion;
+tr.dataset.telefono = telefono || '';
 
+// 👇 AGREGA ESTO (SEGURO)
+tr.dataset.id = id || '';
+tr.dataset.nombre = nombre || '';
+tr.dataset.tipo = tipo || '';
+tr.dataset.problema = problema || '';
+tr.dataset.ubicacion = ubicacion || '';
+
+tr.innerHTML = `
+    <td>${id || ''}</td>
+    <td>${nombre || ''}</td>
+    <td>${tipo || ''}</td>
+    <td>${problema || ''}</td>
+    <td>${ubicacion || ''}</td>
+    <td class="estado-cell">${estadoSel}</td>
+    <td class="prioridad-cell">${prioridadSel}</td>
+    <td>${fecha || ''}</td>
+    <td>${tecnicoSelect}</td>
+`;
         tabla.appendChild(tr);
 
         const insertedEstadoSel = tr.querySelector('.estado-select');
