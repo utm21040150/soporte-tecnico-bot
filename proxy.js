@@ -164,7 +164,7 @@ global.sessions[telefono] = { step: 99 };
 
         const mensaje = `📋 Tu ticket #${ticketId} ha sido atendido.
 
-🙏 Ayúdanos calificando el servicio:
+Ayúdanos calificando el servicio:
 
 1️⃣ Malo
 2️⃣ Regular
