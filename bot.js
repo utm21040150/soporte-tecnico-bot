@@ -101,36 +101,51 @@ async function startBot() {
 
     sock = makeWASocket({
         auth: state,
-        printQRInTerminal: true,
         logger: P({ level: 'silent' })
     });
 
     sock.ev.on('creds.update', saveCreds);
 
-    sock.ev.on('connection.update', async (update) => {
+ const qrcode = require('qrcode-terminal');
 
-        const { connection, lastDisconnect } = update;
+sock.ev.on('connection.update', async (update) => {
 
-        if (connection === 'close') {
+    const { connection, lastDisconnect, qr } = update;
 
-            console.log('❌ Conexión cerrada');
+    // MOSTRAR QR
+    if (qr) {
 
-            const shouldReconnect =
-                lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
+        console.log('📱 ESCANEA ESTE QR:\n');
 
-          if (shouldReconnect) {
-    console.log('🔄 Reconectando...');
-    setTimeout(() => {
-        startBot();
-    }, 5000);
-}
-        } else if (connection === 'open') {
+        qrcode.generate(qr, {
+            small: true
+        });
+    }
 
-            console.log('✅ Bot conectado correctamente');
+    // CONECTADO
+    if (connection === 'open') {
 
+        console.log('✅ Bot conectado correctamente');
+    }
+
+    // DESCONECTADO
+    if (connection === 'close') {
+
+        console.log('❌ Conexión cerrada');
+
+        const shouldReconnect =
+            lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
+
+        if (shouldReconnect) {
+
+            console.log('🔄 Reconectando...');
+
+            setTimeout(() => {
+                startBot();
+            }, 5000);
         }
-    });
-
+    }
+});
     sock.ev.on('messages.upsert', async ({ messages }) => {
 
         try {
