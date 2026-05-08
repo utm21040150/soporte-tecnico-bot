@@ -5,11 +5,14 @@
     <meta charset="UTF-8">
     <title>Soporte Técnico</title>
 
-    <!-- RESPONSIVE (muy importante) -->
+    <!-- RESPONSIVE -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Estilos -->
+    <!-- ESTILOS -->
     <link rel="stylesheet" href="styles.css">
+
+    <!-- CHART.JS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -26,7 +29,6 @@
             <h3>Total de Servicios</h3>
             <p id="total">0</p>
         </div>
-
         <div class="card">
             <h3>Servicios Abiertos</h3>
             <p id="abiertos">0</p>
@@ -43,7 +45,16 @@
 
     <!-- TABLA -->
     <section class="table-container">
-        <h2>📋 Servicios de Mantenimiento</h2>
+        <div class="table-top">
+            <div>
+                <h2>📋 Servicios de Mantenimiento</h2>
+                <p class="table-subtitle">Presiona el botón para cargar los registros desde Google Sheets.</p>
+            </div>
+            <div class="button-group">
+                <button id="loadDataBtn" type="button">Cargar datos</button>
+                <button id="showChartBtn" type="button">Mostrar gráfica</button>
+            </div>
+        </div>
 
         <table>
             <thead>
@@ -61,7 +72,9 @@
             </thead>
 
             <tbody id="tablaServicios">
-                <!-- Se llena dinámicamente -->
+                <tr>
+                    <td colspan="9">Presiona "Cargar datos" para ver los registros.</td>
+                </tr>
             </tbody>
         </table>
     </section>

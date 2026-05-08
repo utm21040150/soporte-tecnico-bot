@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Gráfica de Tickets</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <header class="header">
+        <h1>📊 Gráfica de Tickets</h1>
+        <span class="subtitle">Tickets de la última semana</span>
+    </header>
+
+    <section class="table-container">
+        <div class="table-top">
+            <div>
+                <p>La gráfica se genera desde los datos de Google Sheets. Puedes actualizarla si deseas.</p>
+            </div>
+            <div class="button-group">
+                <button id="reloadChartBtn" class="button" type="button">Actualizar gráfica</button>
+                <a class="button" href="index.html">Volver</a>
+            </div>
+        </div>
+
+        <div class="chart-page-message" id="chartMessage">Cargando gráfica...</div>
+        <canvas id="graficaSemana"></canvas>
+    </section>
+
+    <script src="chart.js"></script>
+</body>
+
+</html>
