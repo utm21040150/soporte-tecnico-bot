@@ -1,6 +1,7 @@
 {
   "name": "bot-whatsapp",
   "version": "1.0.0",
+  "description": "Bot de soporte técnico WhatsApp",
   "main": "bot.js",
   "scripts": {
     "start": "node bot.js"
@@ -9,9 +10,13 @@
     "node": "20.x"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "^6.7.18",
-    "axios": "^1.6.0",
-    "pino": "^9.0.0",
+    "@whiskeysockets/baileys": "^7.0.0-rc10",
+    "axios": "^1.16.0",
+    "express": "^5.2.1",
+    "pino": "^8.21.0",
+    "qrcode": "^1.5.4",
     "qrcode-terminal": "^0.12.0"
-  }
+  },
+  "author": "",
+  "license": "ISC"
 }

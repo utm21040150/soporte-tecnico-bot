@@ -5,9 +5,60 @@ const SHEET_URL = window.location.protocol.startsWith('http')
 
 let chartSemana = null;
 
-function updateChartMessage(text) {
-    const msg = document.getElementById('chartMessage');
-    if (msg) msg.textContent = text;
+function pad2(value) {
+    return String(value).padStart(2, '0');
+}
+
+function tryParseDate(dateText) {
+    const d = new Date(dateText);
+    return isNaN(d) ? null : d;
+}
+
+function parseSheetDate(raw) {
+    if (raw == null || raw === '') return null;
+
+    let value = raw;
+    if (typeof value === 'object') {
+        if (value.f) value = value.f;
+        else if (value.v !== undefined) value = value.v;
+        else value = String(value);
+    }
+
+    if (typeof value === 'number') {
+        if (value > 1e12) return new Date(value);
+        if (value > 1e9) return new Date(value * 1000);
+        const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+        return new Date(excelEpoch.getTime() + value * 24 * 60 * 60 * 1000);
+    }
+
+    const text = String(value).trim();
+    if (!text) return null;
+
+    let parsed = tryParseDate(text);
+    if (parsed) return parsed;
+
+    const datePart = text.split(' ')[0];
+    const slashParts = datePart.split('/');
+    if (slashParts.length === 3) {
+        const [p1, p2, p3] = slashParts.map(part => part.padStart(2, '0'));
+        parsed = tryParseDate(`${p3}-${p2}-${p1}`);
+        if (parsed) return parsed;
+    }
+
+    const dashParts = datePart.split('-');
+    if (dashParts.length === 3) {
+        parsed = tryParseDate(datePart);
+        if (parsed) return parsed;
+        parsed = tryParseDate(`${dashParts[2]}-${dashParts[1]}-${dashParts[0]}`);
+        if (parsed) return parsed;
+    }
+
+    return null;
+}
+
+function formatDateObject(date) {
+    if (!(date instanceof Date) || isNaN(date)) return null;
+    return `${pad2(date.getDate())}/${pad2(date.getMonth() + 1)}/${date.getFullYear()}`;
 }
 
 function generarGraficaSemana(rows, cols) {
@@ -15,7 +66,7 @@ function generarGraficaSemana(rows, cols) {
     cols.forEach((c, i) => headerMap[c.toLowerCase()] = i);
 
     const get = (row, name) => {
-        const idx = headerMap[name];
+        const idx = headerMap[name.toLowerCase()];
         return idx !== undefined ? row.c[idx]?.v : '';
     };
 
@@ -25,10 +76,14 @@ function generarGraficaSemana(rows, cols) {
     hace7.setDate(hoy.getDate() - 7);
 
     rows.forEach(r => {
-        const f = new Date(get(r, 'fecha'));
-        if (isNaN(f)) return;
-        if (f >= hace7 && f <= hoy) {
-            conteo[f.getDay()]++;
+        const fechaTexto = get(r, 'fecha');
+        if (!fechaTexto) return;
+
+        const parsedDate = parseSheetDate(fechaTexto);
+        if (!parsedDate) return;
+
+        if (parsedDate >= hace7 && parsedDate <= hoy) {
+            conteo[parsedDate.getDay()]++;
         }
     });
 

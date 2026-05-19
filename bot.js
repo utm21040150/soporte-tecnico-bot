@@ -6,9 +6,9 @@ const {
 } = require('@whiskeysockets/baileys');
 
 const P = require('pino');
+const qrcode = require('qrcode-terminal');
 
-let sock;
-
+let sock; const processedMessages = new Set();
 const SHEET_API = process.env.SHEET_API || "https://script.google.com/macros/s/AKfycbzuSeeY8zJSLkYzLZL8bSBoVyzl1d46oRc9bB9sAPOk1dI0hhUGErHfz0C2SjF8SFfo0g/exec";
 const LOG_ENDPOINT = process.env.LOG_ENDPOINT || null;
 const ADMIN_NUMBER = process.env.ADMIN_NUMBER || null;
@@ -98,59 +98,74 @@ process.on('uncaughtException', (err) => {
 async function startBot() {
 
     const { state, saveCreds } = await useMultiFileAuthState('./session');
+sock = makeWASocket({
+    auth: state,
+    logger: P({ level: 'silent' }),
+    browser: ['Chrome', 'Windows', '10']
+});
 
-    sock = makeWASocket({
-        auth: state,
-        logger: P({ level: 'silent' })
-    });
+global.client = sock;
 
     sock.ev.on('creds.update', saveCreds);
+    sock.ev.on('connection.update', async (update) => {
 
- const qrcode = require('qrcode-terminal');
+        const { connection, lastDisconnect, qr } = update;
 
-sock.ev.on('connection.update', async (update) => {
+        if (qr) {
 
-    const { connection, lastDisconnect, qr } = update;
+            console.log('📱 ESCANEA ESTE QR:\n');
 
-    // MOSTRAR QR
-    if (qr) {
-
-        console.log('📱 ESCANEA ESTE QR:\n');
-
-        qrcode.generate(qr, {
-            small: true
-        });
-    }
-
-    // CONECTADO
-    if (connection === 'open') {
-
-        console.log('✅ Bot conectado correctamente');
-    }
-
-    // DESCONECTADO
-    if (connection === 'close') {
-
-        console.log('❌ Conexión cerrada');
-
-        const shouldReconnect =
-            lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-
-        if (shouldReconnect) {
-
-            console.log('🔄 Reconectando...');
-
-            setTimeout(() => {
-                startBot();
-            }, 5000);
+            qrcode.generate(qr, {
+                small: true
+            });
         }
-    }
-});
-    sock.ev.on('messages.upsert', async ({ messages }) => {
+
+        // CONECTADO
+        if (connection === 'open') {
+
+            console.log('✅ Bot conectado correctamente');
+        }
+
+        // DESCONECTADO
+        if (connection === 'close') {
+
+            console.log('❌ Conexión cerrada');
+            console.log(lastDisconnect?.error);
+
+            const shouldReconnect =
+                lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
+
+            if (shouldReconnect) {
+
+                console.log('🔄 Reconectando...');
+
+                setTimeout(() => {
+                    startBot();
+                }, 5000);
+            }
+        }
+    });
+    sock.ev.on('messages.upsert', async ({ messages, type }) => {
+
+        // SOLO procesar notificaciones nuevas
+        if (type !== 'notify') return;
 
         try {
 
             const msg = messages[0];
+            // Evitar duplicados
+            const messageId = msg.key.id;
+
+            if (processedMessages.has(messageId)) {
+                return;
+            }
+
+            processedMessages.add(messageId);
+
+            // Limpiar memoria
+            setTimeout(() => {
+                processedMessages.delete(messageId);
+            }, 60000);
 
             if (!msg.message) return;
             if (msg.key.fromMe) return;
@@ -164,6 +179,9 @@ sock.ev.on('connection.update', async (update) => {
                 msg.message.conversation ||
                 msg.message.extendedTextMessage?.text ||
                 '';
+
+            if (!msg.message.conversation && !msg.message.extendedTextMessage) return;
+            if (!text.trim()) return;
 
             console.log(`📩 ${user}: ${text}`);
 
@@ -184,36 +202,60 @@ sock.ev.on('connection.update', async (update) => {
             // ENCUESTA
             // =======================
 
-            if (
-                s.step === 99 &&
-                ["1", "2", "3"].includes(text.trim())
-            ) {
+            if (s.step === 99) {
 
-                const calificaciones = {
-                    "1": "Malo",
-                    "2": "Regular",
-                    "3": "Excelente"
+                const opcion = text.trim();
+
+                // Si responde encuesta
+                if (["1", "2", "3"].includes(opcion)) {
+
+                    const calificaciones = {
+                        "1": "Malo",
+                        "2": "Regular",
+                        "3": "Excelente"
+                    };
+
+                    try {
+
+                        await axios.post(SHEET_API, {
+                            telefono: user,
+                            calificacion: calificaciones[opcion]
+                        });
+
+                        await sendMessage(
+                            user,
+                            `⭐ Gracias por tu evaluación
+
+Tu opinión nos ayuda a mejorar el servicio de soporte técnico.
+
+✉️ Si deseas generar otro ticket escribe cualquier mensaje.`
+                        );
+
+                    } catch (e) {
+                        console.error(e);
+                    }
+
+                    // Reiniciar flujo
+                    sessions[user] = {
+                        step: 0,
+                        data: {}
+                    };
+
+                    return;
+                }
+
+                // Si manda cualquier otra cosa
+                sessions[user] = {
+                    step: 0,
+                    data: {}
                 };
 
-                try {
+                await sendMessage(
+                    user,
+                    `🔄 Iniciando nuevo ticket...
 
-                    await axios.post(SHEET_API, {
-                        telefono: user,
-                        calificacion: calificaciones[text.trim()]
-                    });
-
-                    await sendMessage(
-                        user,
-                        `⭐ Gracias por tu evaluación
-
-Tu opinión nos ayuda a mejorar el servicio de soporte técnico.`
-                    );
-
-                    delete sessions[user];
-
-                } catch (e) {
-                    console.error(e);
-                }
+*Indica tu nombre:*`
+                );
 
                 return;
             }
@@ -310,7 +352,16 @@ A continuación te haremos una breve encuesta para generar tu ticket.
                         return;
                     }
 
-                    s.data.tipo = text;
+                    const tipos = {
+                        1: "Impresoras",
+                        2: "Sistema SIC",
+                        3: "Servicio de Internet",
+                        4: "Telefonía",
+                        5: "Correo Institucional",
+                        6: "Soporte Técnico"
+                    };
+
+                    s.data.tipo = tipos[numero];
                     s.data.tipo_numero = numero;
 
                     const menus = {
@@ -461,8 +512,8 @@ A continuación te haremos una breve encuesta para generar tu ticket.
                         }
                     };
 
-                   s.data.problema_descripcion =
-    descripciones[s.data.tipo_numero.toString()][subopcion.toString()];
+                    s.data.problema_descripcion =
+                        descripciones[s.data.tipo_numero.toString()][subopcion.toString()];
 
                     s.step = 4;
 
@@ -478,7 +529,6 @@ A continuación te haremos una breve encuesta para generar tu ticket.
                 // =======================
                 // GENERAR TICKET
                 // =======================
-
                 case 4:
 
                     s.data.ubicacion = text;
@@ -509,7 +559,9 @@ A continuación te haremos una breve encuesta para generar tu ticket.
 📝 Problema: ${s.data.problema_descripcion}
 📅 Fecha: ${s.data.fecha}
 
-Gracias por comunicarte con soporte técnico de SEDESO.`
+Gracias por comunicarte con soporte técnico de SEDESO.
+
+✉️ Si deseas generar otro ticket solo escribe cualquier mensaje.`
                         );
 
                     } catch (error) {
@@ -522,11 +574,22 @@ Gracias por comunicarte con soporte técnico de SEDESO.`
                         );
                     }
 
-                    delete sessions[user];
+                    // Pasar a encuesta
+                    s.step = 99;
 
-                    break;
+                    await sendMessage(
+                        user,
+                        `Por favor califica nuestro servicio:
+
+1️⃣ Malo
+2️⃣ Regular
+3️⃣ Excelente
+
+*Envía solo el número (1-3)*`
+                    );
+
+                    return;
             }
-
         } catch (err) {
 
             console.error(err);

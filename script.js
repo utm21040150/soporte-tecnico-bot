@@ -25,6 +25,73 @@ function buildSelect(options, selected, className) {
     </select>`;
 }
 
+// ================= FECHAS =================
+function pad2(value) {
+    return String(value).padStart(2, '0');
+}
+
+function formatDateObject(date) {
+    if (!(date instanceof Date) || isNaN(date)) return null;
+    return `${pad2(date.getDate())}/${pad2(date.getMonth() + 1)}/${date.getFullYear()}`;
+}
+
+function parseSheetDate(raw) {
+    if (raw == null || raw === '') return null;
+
+    let value = raw;
+    if (typeof value === 'object') {
+        if (value.f) value = value.f;
+        else if (value.v !== undefined) value = value.v;
+        else value = String(value);
+    }
+
+    if (typeof value === 'number') {
+        if (value > 1e12) {
+            return new Date(value);
+        }
+        if (value > 1e9) {
+            return new Date(value * 1000);
+        }
+        const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+        return new Date(excelEpoch.getTime() + value * 24 * 60 * 60 * 1000);
+    }
+
+    const text = String(value).trim();
+    if (!text) return null;
+
+    const tryDate = dateText => {
+        const d = new Date(dateText);
+        return isNaN(d) ? null : d;
+    };
+
+    let parsed = tryDate(text);
+    if (parsed) return parsed;
+
+    const datePart = text.split(' ')[0].trim();
+    const slashParts = datePart.split('/');
+    if (slashParts.length === 3) {
+        const [p1, p2, p3] = slashParts.map(part => part.padStart(2, '0'));
+        parsed = tryDate(`${p3}-${p2}-${p1}`);
+        if (parsed) return parsed;
+    }
+
+    const dashParts = datePart.split('-');
+    if (dashParts.length === 3) {
+        const [a, b, c] = dashParts;
+        parsed = tryDate(`${a}-${b}-${c}`);
+        if (parsed) return parsed;
+        parsed = tryDate(`${c}-${b}-${a}`);
+        if (parsed) return parsed;
+    }
+
+    return null;
+}
+
+function formatearFecha(fechaRaw) {
+    const date = parseSheetDate(fechaRaw);
+    return date ? formatDateObject(date) : (fechaRaw || '');
+}
+
 // ================= CLASES =================
 function estadoClassFromValue(v) {
     const n = normalizeLabel(v);
@@ -39,24 +106,6 @@ function prioridadClassFromValue(v) {
     if (n.includes('alta')) return 'prioridad-alta';
     if (n.includes('media')) return 'prioridad-media';
     return 'prioridad-baja';
-}
-
-// ================= FORMATEAR FECHA (FIX 🔥) =================
-function formatearFecha(fechaRaw) {
-    if (!fechaRaw) return '';
-
-    const fecha = new Date(fechaRaw);
-
-    if (isNaN(fecha)) return fechaRaw;
-
-    return fecha.toLocaleString('es-MX', {
-        timeZone: 'America/Mexico_City',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
 }
 
 // ================= CONTADORES =================
@@ -162,7 +211,9 @@ function renderFromRows(jsonRows, cols) {
 
     jsonRows.forEach(r => {
 
-        const telefono = find(r, ['telefono']);
+        const tr = document.createElement('tr');
+
+        const telefono = find(r, ['telefono', 'numero']);
         const id = find(r, ['id']);
         const nombre = find(r, ['nombre']);
         const tipo = find(r, ['tipo']);
@@ -170,38 +221,35 @@ function renderFromRows(jsonRows, cols) {
         const ubicacion = find(r, ['ubicacion']);
         const estado = find(r, ['estado']);
         const prioridad = find(r, ['prioridad']);
-        const fecha = formatearFecha(find(r, ['fecha']));
+        const fecha = formatearFecha(find(r, ['fecha']) || '');
 
-        const tr = document.createElement('tr');
-
-        // 🔥 DATASET (FIX IMPORTANTE)
-        tr.dataset.telefono = telefono;
         tr.dataset.id = id;
+        tr.dataset.telefono = telefono;
         tr.dataset.nombre = nombre;
         tr.dataset.tipo = tipo;
         tr.dataset.problema = problema;
         tr.dataset.ubicacion = ubicacion;
 
         tr.innerHTML = `
-            <td>${id}</td>
-            <td>${nombre}</td>
-            <td>${tipo}</td>
-            <td>${problema}</td>
-            <td>${ubicacion}</td>
-            <td class="estado-cell">${buildSelect(['Abierto', 'En Proceso', 'Cerrado'], estado, 'estado-select')}</td>
-            <td class="prioridad-cell">${buildSelect(['Alta', 'Media', 'Baja'], prioridad, 'prioridad-select')}</td>
-            <td>${fecha}</td>
-            <td>
-                <select class="tecnico-select">
-                    <option value="">Asignar</option>
-                    <option>Brandon</option>
-                    <option>Iram</option>
-                    <option>Christopher</option>
-                    <option>Poblano</option>
-                    <option>NuevoTecnico</option>
-                </select>
-            </td>
-        `;
+        <td>${id}</td>
+        <td>${nombre}</td>
+        <td>${tipo}</td>
+        <td>${problema}</td>
+        <td>${ubicacion}</td>
+        <td class="estado-cell">${buildSelect(['Abierto', 'En Proceso', 'Cerrado'], estado, 'estado-select')}</td>
+        <td class="prioridad-cell">${buildSelect(['Alta', 'Media', 'Baja'], prioridad, 'prioridad-select')}</td>
+        <td>${fecha}</td>
+        <td>
+            <select class="tecnico-select">
+                <option value="">Asignar</option>
+                <option>Brandon</option>
+                <option>Iram</option>
+                <option>Christopher</option>
+                <option>Poblano</option>
+                <option>NuevoTecnico</option>
+            </select>
+        </td>
+    `;
 
         tabla.appendChild(tr);
         attachRowListeners(tr);
@@ -216,55 +264,100 @@ function generarGraficaSemana() {
     const { rows, cols } = datosGlobales;
 
     const headerMap = {};
-    cols.forEach((c, i) => headerMap[c.toLowerCase()] = i);
+
+    cols.forEach((c, i) => {
+        headerMap[c.toLowerCase()] = i;
+    });
 
     const get = (row, name) => {
-        const idx = headerMap[name];
+        const idx = headerMap[name.toLowerCase()];
         return idx !== undefined ? row.c[idx]?.v : '';
     };
 
     const conteo = [0, 0, 0, 0, 0, 0, 0];
+
     const hoy = new Date();
+
     const hace7 = new Date();
     hace7.setDate(hoy.getDate() - 7);
 
     rows.forEach(r => {
-        const f = new Date(get(r, 'fecha'));
-        if (isNaN(f)) return;
 
-        if (f >= hace7 && f <= hoy) {
-            conteo[f.getDay()]++;
+        const fechaTexto = get(r, 'fecha');
+
+        if (!fechaTexto) return;
+
+        // FORMATO MX
+        const partes = fechaTexto.split(',');
+
+        if (partes.length < 1) return;
+
+        const fechaPart = partes[0].trim();
+
+        const [dia, mes, anio] = fechaPart.split('/');
+
+        if (!dia || !mes || !anio) return;
+
+        const fecha = new Date(
+            `${anio}-${mes}-${dia}`
+        );
+
+        if (isNaN(fecha)) return;
+
+        if (fecha >= hace7 && fecha <= hoy) {
+
+            conteo[fecha.getDay()]++;
         }
     });
 
     const chartSection = document.getElementById('chartSection');
-    if (chartSection) chartSection.style.display = 'block';
+
+    if (chartSection) {
+        chartSection.style.display = 'block';
+    }
 
     const canvas = document.getElementById('graficaSemana');
-    if (!canvas) return;
+
+    if (!canvas) {
+        console.error('No existe canvas graficaSemana');
+        return;
+    }
 
     if (chartSemana) {
         chartSemana.destroy();
     }
 
     chartSemana = new Chart(canvas, {
+
         type: 'bar',
+
         data: {
-            labels: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"],
+
+            labels: [
+                "Dom",
+                "Lun",
+                "Mar",
+                "Mié",
+                "Jue",
+                "Vie",
+                "Sáb"
+            ],
+
             datasets: [{
                 label: 'Tickets últimos 7 días',
                 data: conteo,
-                backgroundColor: 'rgba(33, 150, 243, 0.7)',
-                borderColor: 'rgba(33, 150, 243, 1)',
                 borderWidth: 1
             }]
         },
+
         options: {
             responsive: true,
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: { precision: 0 }
+                    ticks: {
+                        precision: 0
+                    }
                 }
             }
         }
@@ -305,10 +398,34 @@ async function cargarDatos() {
     }
 }
 
-const botonCargar = document.getElementById('loadDataBtn');
-const botonMostrarGrafica = document.getElementById('showChartBtn');
+window.addEventListener('DOMContentLoaded', () => {
 
-botonCargar?.addEventListener('click', cargarDatos);
-botonMostrarGrafica?.addEventListener('click', () => {
-    window.location.href = 'chart.html';
+    console.log('✅ DOM cargado');
+
+    const botonCargar = document.getElementById('loadDataBtn');
+    const botonMostrarGrafica = document.getElementById('showChartBtn');
+
+    console.log('Botón cargar:', botonCargar);
+    console.log('Botón gráfica:', botonMostrarGrafica);
+
+    if (botonCargar) {
+
+        botonCargar.addEventListener('click', () => {
+
+            console.log('📥 Click cargar datos');
+
+            cargarDatos();
+        });
+    }
+
+    if (botonMostrarGrafica) {
+
+        botonMostrarGrafica.addEventListener('click', () => {
+
+            console.log('📊 Click gráfica');
+
+            window.location.href = 'chart.html';
+        });
+    }
+
 });

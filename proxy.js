@@ -43,28 +43,51 @@ app.post('/notificar', async (req, res) => {
     const { ticketId, tecnico, nombre, tipo, problema, ubicacion } = req.body;
 
     const numeros = {
-        Brandon: '5214492056415@c.us',
-        Iram: '5214491680420@c.us',
-        Christopher: '5214493125385@c.us',
-        Poblano: '5214494612475@c.us',
-        NuevoTecnico: '5210000000000@c.us'
+        Brandon: '5214492056415@s.whatsapp.net',
+        Iram: '5214491680420@s.whatsapp.net',
+        Christopher: '5214493125385@s.whatsapp.net',
+        Poblano: '5214494612475@s.whatsapp.net',
+        NuevoTecnico: '5210000000000@s.whatsapp.net'
     };
 
     try {
 
-        const mensaje = `🆕 Ticket #${ticketId}
-👤 ${nombre}
-🛠 ${tipo}
-📄 ${problema}
-📍 ${ubicacion}
-👨‍🔧 ${tecnico}`;
+        const numeroTecnico = numeros[tecnico];
 
-        await global.client.sendMessage(numeros[tecnico], mensaje);
+        if (!numeroTecnico) {
+            return res.json({
+                success: false,
+                error: 'Técnico no encontrado'
+            });
+        }
+
+        const mensaje =
+`🆕 NUEVO TICKET
+
+🎫 Ticket: ${ticketId}
+👤 Usuario: ${nombre}
+🛠 Tipo: ${tipo}
+📄 Problema: ${problema}
+📍 Ubicación: ${ubicacion}
+👨‍🔧 Técnico: ${tecnico}`;
+
+        await global.client.sendMessage(
+            numeroTecnico,
+            { text: mensaje }
+        );
+
+        console.log('✅ Ticket enviado a técnico');
 
         res.json({ success: true });
 
-    } catch {
-        res.json({ success: false });
+    } catch (error) {
+
+        console.log(error);
+
+        res.json({
+            success: false,
+            error: error.message
+        });
     }
 });
 
